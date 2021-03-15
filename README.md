@@ -2,7 +2,7 @@
 vOffice Domaincheck as Web Component
 
 add on a wish position the custom html tag: 
-
+```
 <vof-checker 
             isRaMicro="nein"
             partnerId="1"
@@ -14,6 +14,8 @@ add on a wish position the custom html tag:
             <span slot="chip-error">Bereits vergeben</span>
             <span slot="chip-success">Verfügbar</span>
 </vof-checker>
+```
+
 
 you kann replace the slot inner texts to customize it. if is a ra-micro page: set isRaMicro="ja" 
 partnerId not supported right moment
