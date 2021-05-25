@@ -176,7 +176,8 @@ class VofChecker extends HTMLElement {
       .replaceAll('ö', 'oe')
       .replaceAll('ü', 'ue')
       .replaceAll('ß', 'ss')
-      .replaceAll(/[^0-9a-zA-Z_-]/g, '')
+      .replaceAll(/-{2,}/g, '-')
+      .replaceAll(/[^0-9a-zA-Z-]/g, '')
   }
 
   async checkDomain(value) {
