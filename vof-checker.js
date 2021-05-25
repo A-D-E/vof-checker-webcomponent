@@ -157,96 +157,101 @@ template.innerHTML = `
     </div>
 `
 class VofChecker extends HTMLElement {
-    constructor(){
-        super()
-        this.attachShadow({ mode: "open"})
-        this.shadowRoot.appendChild(template.content.cloneNode(true))
-        this.loader = this.shadowRoot.querySelector('.loader')
-        this.btn = this.shadowRoot.querySelector('#vof-checker__button')
-        this.setupBtn = this.shadowRoot.querySelector('#vof-checker__setup-button')
-        this.chipError = this.shadowRoot.querySelector('#vof-checker__chip-error')
-        this.chipSuccess = this.shadowRoot.querySelector('#vof-checker__chip-success')
-    }
-    
-    vormatedValue(val){
-      return val.replace(/[^0-9a-zA-Z_-]/g, '')
-    }
+  constructor() {
+    super()
+    this.attachShadow({ mode: 'open' })
+    this.shadowRoot.appendChild(template.content.cloneNode(true))
+    this.loader = this.shadowRoot.querySelector('.loader')
+    this.btn = this.shadowRoot.querySelector('#vof-checker__button')
+    this.setupBtn = this.shadowRoot.querySelector('#vof-checker__setup-button')
+    this.chipError = this.shadowRoot.querySelector('#vof-checker__chip-error')
+    this.chipSuccess = this.shadowRoot.querySelector(
+      '#vof-checker__chip-success'
+    )
+  }
 
-    async checkDomain(value){
-        this.loader.style.display = 'inline-flex'
-        this.btn.classList.add('disabled')
-        const isRaMicro = this.getAttribute('isRaMicro') === "ja"
-        const partnerId = this.getAttribute('partnerId') !== ""
+  vormatedValue(val) {
+    return val
+      .replace('ä', 'ae')
+      .replace('ö', 'oe')
+      .replace('ü', 'ue')
+      .replace('ß', 'ss')
+      .replace(/[^0-9a-zA-Z_-]/g, '')
+  }
 
-        const headers = new Headers()
-        headers.append('Content-Type', 'application/json')
-        headers.append('Accept', 'application/json')
-        
-        const resData = await fetch(
-          `https://${value}${
-              isRaMicro ?
-              '.ra-micro.voffice.pro' :
-              '.voffice.pro'
-            }/api/namespaceExists`,
-          {
-            headers: headers,
-          }
-        )
-          .then((data) => data.json())
-          .then((res) => {
-              this.loader.style.display = 'none'
-              this.btn.classList.remove('disabled')
-              if (res['setupDone'] || res['creatorInfo'] || res['noNewUsers']) {
-                this.setupBtn.classList.add('disabled')
-                if (this.chipError.classList.contains('hide'))
-                  this.chipError.classList.remove('hide')
-                if (!this.chipSuccess.classList.contains('hide'))
-                  this.chipSuccess.classList.add('hide')
-              } else {
-                if (!this.chipError.classList.contains('hide'))
-                  this.chipError.classList.add('hide')
-                if (this.chipSuccess.classList.contains('hide'))
-                  this.chipSuccess.classList.remove('hide')
-                this.setupBtn.classList.remove('disabled')
-                this.btn.classList.add('disabled')
-                this.setupBtn.addEventListener('click', (e) => {
-                  e.preventDefault()
-                  window.location = `https://${value}${
-                    isRaMicro ? '.ra-micro.voffice.pro' : '.voffice.pro'
-                  }`
-                })
-              }
-          })
-          .catch((error) => {
-              this.loader.style.display = 'none'
-              this.btn.classList.remove('disabled')
-            return console.error('Error', error)
-          })
-    }
-    connectedCallback(){
-        let value
-        this.shadowRoot.querySelector('input').addEventListener('input', (e) => {
-         this.setupBtn.classList.add('disabled')
+  async checkDomain(value) {
+    this.loader.style.display = 'inline-flex'
+    this.btn.classList.add('disabled')
+    const isRaMicro = this.getAttribute('isRaMicro') === 'ja'
+    const partnerId = this.getAttribute('partnerId') !== ''
 
-          if(!this.chipError.classList.contains('hide')) this.chipError.classList.add('hide')
-          if(!this.chipSuccess.classList.contains('hide')) this.chipSuccess.classList.add('hide')
+    const headers = new Headers()
+    headers.append('Content-Type', 'application/json')
+    headers.append('Accept', 'application/json')
 
-           value = e.target.value.toLowerCase()
-          
-           if (
-             this.vormatedValue(value.trim()).length < 3 ||
-             this.vormatedValue(value.trim()).length > 30
-           ) {
-             this.btn.classList.add('disabled')
-           } else this.btn.classList.remove('disabled')
-        })
-        this.shadowRoot.querySelector('button').addEventListener('click', (e)=> {
+    const resData = await fetch(
+      `https://${value}${
+        isRaMicro ? '.ra-micro.voffice.pro' : '.voffice.pro'
+      }/api/namespaceExists`,
+      {
+        headers: headers,
+      }
+    )
+      .then((data) => data.json())
+      .then((res) => {
+        this.loader.style.display = 'none'
+        this.btn.classList.remove('disabled')
+        if (res['setupDone'] || res['creatorInfo'] || res['noNewUsers']) {
+          this.setupBtn.classList.add('disabled')
+          if (this.chipError.classList.contains('hide'))
+            this.chipError.classList.remove('hide')
+          if (!this.chipSuccess.classList.contains('hide'))
+            this.chipSuccess.classList.add('hide')
+        } else {
+          if (!this.chipError.classList.contains('hide'))
+            this.chipError.classList.add('hide')
+          if (this.chipSuccess.classList.contains('hide'))
+            this.chipSuccess.classList.remove('hide')
+          this.setupBtn.classList.remove('disabled')
+          this.btn.classList.add('disabled')
+          this.setupBtn.addEventListener('click', (e) => {
             e.preventDefault()
-            this.checkDomain(this.vormatedValue(value.trim()))
-        })
-        
-    }
+            window.location = `https://${value}${
+              isRaMicro ? '.ra-micro.voffice.pro' : '.voffice.pro'
+            }`
+          })
+        }
+      })
+      .catch((error) => {
+        this.loader.style.display = 'none'
+        this.btn.classList.remove('disabled')
+        return console.error('Error', error)
+      })
+  }
+  connectedCallback() {
+    let value
+    this.shadowRoot.querySelector('input').addEventListener('input', (e) => {
+      this.setupBtn.classList.add('disabled')
 
+      if (!this.chipError.classList.contains('hide'))
+        this.chipError.classList.add('hide')
+      if (!this.chipSuccess.classList.contains('hide'))
+        this.chipSuccess.classList.add('hide')
+
+      value = e.target.value.toLowerCase()
+
+      if (
+        this.vormatedValue(value.trim()).length < 3 ||
+        this.vormatedValue(value.trim()).length > 30
+      ) {
+        this.btn.classList.add('disabled')
+      } else this.btn.classList.remove('disabled')
+    })
+    this.shadowRoot.querySelector('button').addEventListener('click', (e) => {
+      e.preventDefault()
+      this.checkDomain(this.vormatedValue(value.trim()))
+    })
+  }
 }
 
 window.customElements.define('vof-checker', VofChecker)
