@@ -176,8 +176,15 @@ class VofChecker extends HTMLElement {
       .replaceAll('ö', 'oe')
       .replaceAll('ü', 'ue')
       .replaceAll('ß', 'ss')
+      .replaceAll('.', '-')
       .replaceAll(/-{2,}/g, '-')
       .replaceAll(/[^0-9a-zA-Z-]/g, '')
+  }
+
+  checkFirstCharachter(val){
+    if (/^[0-9]/g.test(val)){
+      return true
+    }
   }
 
   async checkDomain(value) {
@@ -240,6 +247,11 @@ class VofChecker extends HTMLElement {
         this.chipSuccess.classList.add('hide')
 
       value = e.target.value.toLowerCase()
+
+      if(this.checkFirstCharachter(this.vormatedValue(value.trim()))){
+        e.target.value = ''
+        this.btn.classList.add('disabled')
+      } else this.btn.classList.remove('disabled')
 
       if (
         this.vormatedValue(value.trim()).length < 3 ||
