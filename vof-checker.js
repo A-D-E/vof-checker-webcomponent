@@ -133,7 +133,28 @@ template.innerHTML = `
     font-wight: bold;
   }
 
-  .vof-checker__chip-error.hide, .vof-checker__chip-success.hide{
+  .vof-checker__error {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s, opacity 0.5s linear;
+    color: red;
+    line-height: 1.1;
+    font-size: 90%;
+    padding: 8px 14px;
+  }
+
+  .hide{
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s, opacity 0.5s linear;
+  }
+
+  .show {
+    visibility: visible;
+  opacity: 1;
+  }
+
+  .vof-checker__chip-error.hide, .vof-checker__chip-success.hide {
     display: none
   }
 
@@ -146,13 +167,15 @@ template.innerHTML = `
         <form id="vof-checker__form" class="vof-checker__form">
             <label for="vof-checker__input" id="vof-checker__label" class="vof-checker__label"><slot name="label"></slot></label>
             <div class="vof-checker__inputwrap">
-            <input id="vof-checker__input" class="vof-checker__input" type="text" />
+            <input id="vof-checker__input" class="vof-checker__input" type="text" minlength=3 />
             <span id="vof-checker__chip-error" class="vof-checker__chip-error hide"><span class="vof-checker__chip-error-icon">&#10006;</span><slot name="chip-error"></slot></span>
             <span id="vof-checker__chip-success" class="vof-checker__chip-success hide"><span class="vof-checker__chip-success-icon">&#10004;</span><slot name="chip-success"></slot></span>
+            <div id="vof-checker__error" class="vof-checker__error"><slot name="error"></slot></div>
             </div>
             <button id="vof-checker__button" class="vof-checker__button disabled"><slot name="button"></slot> <span class="loader awesome-spin"></span></button>
             <button id="vof-checker__setup-button" class="vof-checker__setup-button disabled"><slot name="setup-button"></slot></button>
         </form>
+        
         <div id="vof-checker__feedback" class="vof-checker__feedback"><slot name="feedback"></slot></div>
     </div>
 `
@@ -160,11 +183,13 @@ class VofChecker extends HTMLElement {
   constructor() {
     super()
     this.attachShadow({ mode: 'open' })
+    this.hasError = false
     this.shadowRoot.appendChild(template.content.cloneNode(true))
     this.loader = this.shadowRoot.querySelector('.loader')
     this.btn = this.shadowRoot.querySelector('#vof-checker__button')
     this.setupBtn = this.shadowRoot.querySelector('#vof-checker__setup-button')
     this.chipError = this.shadowRoot.querySelector('#vof-checker__chip-error')
+    this.error = this.shadowRoot.querySelector('#vof-checker__error')
     this.chipSuccess = this.shadowRoot.querySelector(
       '#vof-checker__chip-success'
     )
@@ -181,88 +206,124 @@ class VofChecker extends HTMLElement {
       .replaceAll(/[^0-9a-zA-Z-]/g, '')
   }
 
-  checkFirstCharachter(val){
-    if (/^[0-9]/g.test(val)){
+  checkFirstCharachter(val) {
+    if (/^[0-9]/g.test(val)) {
+      this.hasError = true
       return true
+    } else {
+      this.hasError = false
+      return false
     }
   }
 
-  async checkDomain(value) {
+  async checkDomain(value, hasError) {
     this.loader.style.display = 'inline-flex'
     this.btn.classList.add('disabled')
     const isRaMicro = this.getAttribute('isRaMicro') === 'ja'
     const partnerId = this.getAttribute('partnerId') !== ''
-
+    hasError = this.hasError
     const headers = new Headers()
     headers.append('Content-Type', 'application/json')
     headers.append('Accept', 'application/json')
 
-    const resData = await fetch(
-      `https://${value}${
-        isRaMicro ? '.ra-micro.voffice.pro' : '.voffice.pro'
-      }/api/namespaceExists`,
-      {
-        headers: headers,
-      }
-    )
-      .then((data) => data.json())
-      .then((res) => {
-        this.loader.style.display = 'none'
-        this.btn.classList.remove('disabled')
-        if (res['setupDone'] || res['creatorInfo'] || res['noNewUsers']) {
-          this.setupBtn.classList.add('disabled')
-          if (this.chipError.classList.contains('hide'))
-            this.chipError.classList.remove('hide')
-          if (!this.chipSuccess.classList.contains('hide'))
-            this.chipSuccess.classList.add('hide')
-        } else {
-          if (!this.chipError.classList.contains('hide'))
-            this.chipError.classList.add('hide')
-          if (this.chipSuccess.classList.contains('hide'))
-            this.chipSuccess.classList.remove('hide')
-          this.setupBtn.classList.remove('disabled')
-          this.btn.classList.add('disabled')
-          this.setupBtn.addEventListener('click', (e) => {
-            e.preventDefault()
-            window.location = `https://${value}${
-              isRaMicro ? '.ra-micro.voffice.pro' : '.voffice.pro'
-            }`
-          })
+    !hasError &&
+      (await fetch(
+        `https://${value}${
+          isRaMicro ? '.ra-micro.voffice.pro' : '.voffice.pro'
+        }/api/namespaceExists`,
+        {
+          headers: headers,
         }
-      })
-      .catch((error) => {
-        this.loader.style.display = 'none'
-        this.btn.classList.remove('disabled')
-        return console.error('Error', error)
-      })
+      )
+        .then((data) => data.json())
+        .then((res) => {
+          this.loader.style.display = 'none'
+          this.btn.classList.remove('disabled')
+          if (res['setupDone'] || res['creatorInfo'] || res['noNewUsers']) {
+            this.setupBtn.classList.add('disabled')
+            if (this.chipError.classList.contains('hide'))
+              this.chipError.classList.remove('hide')
+            if (!this.chipSuccess.classList.contains('hide'))
+              this.chipSuccess.classList.add('hide')
+          } else {
+            if (!this.chipError.classList.contains('hide'))
+              this.chipError.classList.add('hide')
+            if (this.chipSuccess.classList.contains('hide'))
+              this.chipSuccess.classList.remove('hide')
+            this.setupBtn.classList.remove('disabled')
+            this.btn.classList.add('disabled')
+            this.setupBtn.addEventListener('click', (e) => {
+              e.preventDefault()
+              window.location = `https://${value}${
+                isRaMicro ? '.ra-micro.voffice.pro' : '.voffice.pro'
+              }`
+            })
+          }
+        })
+        .catch((error) => {
+          this.loader.style.display = 'none'
+          this.btn.classList.remove('disabled')
+          return console.error('Error', error)
+        }))
   }
   connectedCallback() {
-    let value
+    let value // get input-value
+
     this.shadowRoot.querySelector('input').addEventListener('input', (e) => {
-      this.setupBtn.classList.add('disabled')
+      e.preventDefault()
+      // get input-event
+      this.setupBtn.classList.add('disabled') // disable checking-btn
+
+      if (this.hasError) {
+        // errormessage handler
+        this.error.classList.add('show')
+        this.error.classList.remove('hide')
+      } else {
+        this.error.classList.remove('show')
+        this.error.classList.add('hide')
+      }
 
       if (!this.chipError.classList.contains('hide'))
+        // error-chip handler
         this.chipError.classList.add('hide')
+
       if (!this.chipSuccess.classList.contains('hide'))
+        // success-chip handler
         this.chipSuccess.classList.add('hide')
 
-      value = e.target.value.toLowerCase()
+      value = e.target.value.toLowerCase() // set input-value to lowercase
 
-      if(this.checkFirstCharachter(this.vormatedValue(value.trim()))){
+      if (this.checkFirstCharachter(this.vormatedValue(value.trim()))) {
+        // check first charachter if not number
         e.target.value = ''
         this.btn.classList.add('disabled')
       } else this.btn.classList.remove('disabled')
 
       if (
+        // check input length
         this.vormatedValue(value.trim()).length < 3 ||
         this.vormatedValue(value.trim()).length > 30
       ) {
+        this.hasError = true
         this.btn.classList.add('disabled')
-      } else this.btn.classList.remove('disabled')
+      } else {
+        this.hasError = false
+        this.btn.classList.remove('disabled')
+      }
     })
+
+    this.shadowRoot.querySelector('input').addEventListener('keyup', (e) => {
+      // block enter key if has error
+      if (e.key === 'Enter' && this.hasError) {
+        return (this.hasError = true)
+      }
+    })
+
     this.shadowRoot.querySelector('button').addEventListener('click', (e) => {
       e.preventDefault()
-      this.checkDomain(this.vormatedValue(value.trim()))
+      if (!this.hasError && value.length > 3) {
+        this.checkDomain(this.vormatedValue(value.trim()))
+      }
     })
   }
 }
