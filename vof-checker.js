@@ -167,7 +167,7 @@ template.innerHTML = `
         <form id="vof-checker__form" class="vof-checker__form">
             <label for="vof-checker__input" id="vof-checker__label" class="vof-checker__label"><slot name="label"></slot></label>
             <div class="vof-checker__inputwrap">
-            <input id="vof-checker__input" class="vof-checker__input" type="text" minlength=3 />
+            <input id="vof-checker__input" class="vof-checker__input" type="text" />
             <span id="vof-checker__chip-error" class="vof-checker__chip-error hide"><span class="vof-checker__chip-error-icon">&#10006;</span><slot name="chip-error"></slot></span>
             <span id="vof-checker__chip-success" class="vof-checker__chip-success hide"><span class="vof-checker__chip-success-icon">&#10004;</span><slot name="chip-success"></slot></span>
             <div id="vof-checker__error" class="vof-checker__error"><slot name="error"></slot></div>
@@ -185,6 +185,7 @@ class VofChecker extends HTMLElement {
     this.attachShadow({ mode: 'open' })
     this.hasError = false
     this.shadowRoot.appendChild(template.content.cloneNode(true))
+    this.input = this.shadowRoot.querySelector('#vof-checker__input')
     this.loader = this.shadowRoot.querySelector('.loader')
     this.btn = this.shadowRoot.querySelector('#vof-checker__button')
     this.setupBtn = this.shadowRoot.querySelector('#vof-checker__setup-button')
@@ -207,7 +208,7 @@ class VofChecker extends HTMLElement {
   }
 
   checkFirstCharachter(val) {
-    if (/^[0-9]/g.test(val)) {
+    if (/^[0-9]/i.test(val)) {
       this.hasError = true
       return true
     } else {
@@ -216,11 +217,26 @@ class VofChecker extends HTMLElement {
     }
   }
 
+  errorHandler(hasError) {
+    if (hasError) {
+      // errormessage handler
+      this.error.classList.add('show')
+      this.error.classList.remove('hide')
+      this.btn.classList.add('disabled')
+      console.log(1)
+    } else {
+      this.error.classList.remove('show')
+      this.error.classList.add('hide')
+      this.btn.classList.remove('disabled')
+      console.log(2)
+    }
+  }
+
   async checkDomain(value, hasError) {
     this.loader.style.display = 'inline-flex'
     this.btn.classList.add('disabled')
-    const isRaMicro = this.getAttribute('isRaMicro') === 'ja'
-    const partnerId = this.getAttribute('partnerId') !== ''
+    const isRaMicro = this.getAttribute('isramicro') === 'ja'
+    const partnerId = this.getAttribute('partnerid') !== ''
     hasError = this.hasError
     const headers = new Headers()
     headers.append('Content-Type', 'application/json')
@@ -266,22 +282,30 @@ class VofChecker extends HTMLElement {
           return console.error('Error', error)
         }))
   }
+
   connectedCallback() {
     let value // get input-value
+    const placeholder = this.getAttribute('placeholder') // get placeholder value
+    this.input.setAttribute('placeholder', placeholder) // set input placeholder
 
-    this.shadowRoot.querySelector('input').addEventListener('input', (e) => {
+    this.input.addEventListener('input', (e) => {
+      value = this.vormatedValue(e.target.value.toLowerCase().trim())
+
       e.preventDefault()
+      const errorsArray = [
+        /^[0-9]/i.test(value),
+        /\s/i.test(value),
+        /\s+/i.test(value),
+        /[ÄÖÜöäüß\.]/i.test(value),
+        /^.{3,30}$/.test(value),
+      ]
       // get input-event
       this.setupBtn.classList.add('disabled') // disable checking-btn
+      this.btn.classList.add('disabled')
 
-      if (this.hasError) {
-        // errormessage handler
-        this.error.classList.add('show')
-        this.error.classList.remove('hide')
-      } else {
-        this.error.classList.remove('show')
-        this.error.classList.add('hide')
-      }
+      errorsArray.every((el) =>
+        el ? this.errorHandler(true) : this.errorHandler(false)
+      )
 
       if (!this.chipError.classList.contains('hide'))
         // error-chip handler
@@ -290,39 +314,29 @@ class VofChecker extends HTMLElement {
       if (!this.chipSuccess.classList.contains('hide'))
         // success-chip handler
         this.chipSuccess.classList.add('hide')
+    })
 
-      value = e.target.value.toLowerCase() // set input-value to lowercase
-
-      if (this.checkFirstCharachter(this.vormatedValue(value.trim()))) {
-        // check first charachter if not number
-        e.target.value = ''
-        this.btn.classList.add('disabled')
-      } else this.btn.classList.remove('disabled')
-
-      if (
-        // check input length
-        this.vormatedValue(value.trim()).length < 3 ||
-        this.vormatedValue(value.trim()).length > 30
-      ) {
-        this.hasError = true
-        this.btn.classList.add('disabled')
-      } else {
-        this.hasError = false
-        this.btn.classList.remove('disabled')
-      }
+    this.input.addEventListener('keyup', function ({ key }) {
+      // if(e.keycode === 32 ) return false;
+      // /^[\d]/i.test(e.key) ? this.errorHandler(true) : this.errorHandler(false);
+      // /\s/i.test(e.key) ? this.errorHandler(true) : this.errorHandler(false);
     })
 
     this.shadowRoot.querySelector('input').addEventListener('keyup', (e) => {
       // block enter key if has error
       if (e.key === 'Enter' && this.hasError) {
-        return (this.hasError = true)
+        this.errorHandler(true)
+      }
+      if (e.key === ' ') {
+        value = ''
+        this.errorHandler(true)
       }
     })
 
     this.shadowRoot.querySelector('button').addEventListener('click', (e) => {
       e.preventDefault()
       if (!this.hasError && value.length > 3) {
-        this.checkDomain(this.vormatedValue(value.trim()))
+        this.checkDomain(value)
       }
     })
   }
