@@ -196,42 +196,6 @@ class VofChecker extends HTMLElement {
     )
   }
 
-  vormatedValue(val) {
-    return val
-      .replaceAll('ä', 'ae')
-      .replaceAll('ö', 'oe')
-      .replaceAll('ü', 'ue')
-      .replaceAll('ß', 'ss')
-      .replaceAll('.', '-')
-      .replaceAll(/-{2,}/g, '-')
-      .replaceAll(/[^0-9a-zA-Z-]/g, '')
-  }
-
-  checkFirstCharachter(val) {
-    if (/^[0-9]/i.test(val)) {
-      this.hasError = true
-      return true
-    } else {
-      this.hasError = false
-      return false
-    }
-  }
-
-  errorHandler(hasError) {
-    if (hasError) {
-      // errormessage handler
-      this.error.classList.add('show')
-      this.error.classList.remove('hide')
-      this.btn.classList.add('disabled')
-      console.log(1)
-    } else {
-      this.error.classList.remove('show')
-      this.error.classList.add('hide')
-      this.btn.classList.remove('disabled')
-      console.log(2)
-    }
-  }
-
   async checkDomain(value, hasError) {
     this.loader.style.display = 'inline-flex'
     this.btn.classList.add('disabled')
@@ -288,24 +252,41 @@ class VofChecker extends HTMLElement {
     const placeholder = this.getAttribute('placeholder') // get placeholder value
     this.input.setAttribute('placeholder', placeholder) // set input placeholder
 
+    const disableCheckBtn = (hasError) =>
+      hasError
+        ? this.btn.classList.add('disabled')
+        : this.btn.classList.remove('disabled')
+
+    const errorHandler = (hasError) => {
+      if (hasError) {
+        // errormessage handler
+        this.error.classList.add('show')
+        this.error.classList.remove('hide')
+        disableCheckBtn(true)
+        this.hasError = true
+      } else {
+        this.error.classList.remove('show')
+        this.error.classList.add('hide')
+        disableCheckBtn(false)
+        this.hasError = false
+      }
+    }
+
+    const vormatedValue = (val) => {
+      return val.replaceAll(/-{2,}/g, '-')
+    }
+
     this.input.addEventListener('input', (e) => {
-      value = this.vormatedValue(e.target.value.toLowerCase().trim())
-
+      value = vormatedValue(e.target.value.toLowerCase().trim())
       e.preventDefault()
-      const errorsArray = [
-        /^[0-9]/i.test(value),
-        /\s/i.test(value),
-        /\s+/i.test(value),
-        /[ÄÖÜöäüß\.]/i.test(value),
-        /^.{3,30}$/.test(value),
-      ]
-      // get input-event
-      this.setupBtn.classList.add('disabled') // disable checking-btn
-      this.btn.classList.add('disabled')
 
-      errorsArray.every((el) =>
-        el ? this.errorHandler(true) : this.errorHandler(false)
-      )
+      this.setupBtn.classList.add('disabled')
+      this.btn.classList.add('disabled') // disable checking-btn
+
+      if (/^[0-9]/i.test(value)) errorHandler(true)
+      else if (!/^.{3,30}$/i.test(value)) errorHandler(true)
+      else if (!/[0-9a-zA-Z-]/i.test(value)) errorHandler(true)
+      else errorHandler(false)
 
       if (!this.chipError.classList.contains('hide'))
         // error-chip handler
@@ -316,29 +297,36 @@ class VofChecker extends HTMLElement {
         this.chipSuccess.classList.add('hide')
     })
 
-    this.input.addEventListener('keyup', function ({ key }) {
-      // if(e.keycode === 32 ) return false;
-      // /^[\d]/i.test(e.key) ? this.errorHandler(true) : this.errorHandler(false);
-      // /\s/i.test(e.key) ? this.errorHandler(true) : this.errorHandler(false);
-    })
-
-    this.shadowRoot.querySelector('input').addEventListener('keyup', (e) => {
+    this.input.addEventListener('keydown', (e) => {
       // block enter key if has error
       if (e.key === 'Enter' && this.hasError) {
-        this.errorHandler(true)
-      }
-      if (e.key === ' ') {
-        value = ''
-        this.errorHandler(true)
+        errorHandler(true)
       }
     })
 
-    this.shadowRoot.querySelector('button').addEventListener('click', (e) => {
+    this.btn.addEventListener('click', (e) => {
       e.preventDefault()
-      if (!this.hasError && value.length > 3) {
+      if (!this.hasError) {
         this.checkDomain(value)
       }
     })
+
+    document.body.onkeydown = function (e) {
+      if (
+        e.key === ' ' ||
+        e.key === 'ä' ||
+        e.key === 'Ä' ||
+        e.key === 'ö' ||
+        e.key === 'Ö' ||
+        e.key === 'ü' ||
+        e.key === 'Ü' ||
+        e.key === 'ß' ||
+        e.key === '.'
+      ) {
+        console.log(e.key + ' illegal character')
+        return false
+      }
+    }
   }
 }
 
