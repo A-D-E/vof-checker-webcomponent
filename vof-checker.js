@@ -94,25 +94,20 @@ template.innerHTML = `
   
  .vof-checker__chip-success {
     position: absolute;
-    right: 0;
+    right: -20px;
     top: 0;
     font-size: 0.75rem;
-    padding: 2px 25px 2px 0;
+    padding: 2px 5px 2px 0;
     line-height: 24px;
-    border: solid thin green;
-    border-radius: 20px;
-    color: green;
+    
   }
   .vof-checker__chip-error {
     position: absolute;
-    right: 0;
+    right: -20px;
     top: 0;
     font-size: 0.75rem;
-    padding: 2px 25px 2px 0;
+    padding: 2px 0px 2px 0;
     line-height: 24px;
-    border: solid thin red;
-    border-radius: 20px;
-    color: red;
   }
 
   .vof-checker__chip-success-icon {
@@ -167,7 +162,7 @@ template.innerHTML = `
         <form id="vof-checker__form" class="vof-checker__form">
             <label for="vof-checker__input" id="vof-checker__label" class="vof-checker__label"><slot name="label"></slot></label>
             <div class="vof-checker__inputwrap">
-            <input id="vof-checker__input" class="vof-checker__input" type="text" />
+            <input id="vof-checker__input" class="vof-checker__input" type="text" maxlength="41" />
             <span id="vof-checker__chip-error" class="vof-checker__chip-error hide"><span class="vof-checker__chip-error-icon">&#10006;</span><slot name="chip-error"></slot></span>
             <span id="vof-checker__chip-success" class="vof-checker__chip-success hide"><span class="vof-checker__chip-success-icon">&#10004;</span><slot name="chip-success"></slot></span>
             <div id="vof-checker__error" class="vof-checker__error"><slot name="error"></slot></div>
@@ -284,7 +279,7 @@ class VofChecker extends HTMLElement {
       this.btn.classList.add('disabled') // disable checking-btn
 
       if (/^[0-9]/i.test(value)) errorHandler(true)
-      else if (!/^.{3,30}$/i.test(value)) errorHandler(true)
+      else if (!/^.{3,40}$/i.test(value)) errorHandler(true)
       else if (!/[0-9a-zA-Z-]/i.test(value)) errorHandler(true)
       else errorHandler(false)
 
@@ -321,7 +316,8 @@ class VofChecker extends HTMLElement {
         e.key === 'ü' ||
         e.key === 'Ü' ||
         e.key === 'ß' ||
-        e.key === '.'
+        e.key === '.' ||
+        /[^a-zA-Z0-9-]/i.test(e.key)
       ) {
         console.log(e.key + ' illegal character')
         return false
