@@ -148,7 +148,7 @@ template.innerHTML = `
     color: red;
     line-height: 1.1;
     font-size: 90%;
-    padding: 8px 14px;
+    padding: 0 0 15px;
   }
 
   .hide{
@@ -178,7 +178,7 @@ template.innerHTML = `
         <form id="vof-checker__form" class="vof-checker__form">
             <label for="vof-checker__input" id="vof-checker__label" class="vof-checker__label"><slot name="label"></slot></label>
             <div class="vof-checker__inputwrap">
-            <input id="vof-checker__input" class="vof-checker__input" type="text" maxlength="41" />
+            <input id="vof-checker__input" class="vof-checker__input" type="text" maxlength="40" />
             <span id="vof-checker__chip-error" class="vof-checker__chip-error hide"><span class="vof-checker__chip-error-icon">&#10006;</span><slot name="chip-error"></slot></span>
             <span id="vof-checker__chip-success" class="vof-checker__chip-success hide"><span class="vof-checker__chip-success-icon">&#10004;</span><slot name="chip-success"></slot></span>
             <div id="vof-checker__error" class="vof-checker__error"><slot name="error"></slot></div>
@@ -297,7 +297,7 @@ class VofChecker extends HTMLElement {
       this.btn.classList.add('disabled') // disable checking-btn
 
       if (/^[0-9]/i.test(value)) errorHandler(true)
-      else if (!/^.{3,40}$/i.test(value)) errorHandler(true)
+      else if (!/^.{3,}$/i.test(value)) errorHandler(true)
       else if (!/[0-9a-zA-Z-]/i.test(value)) errorHandler(true)
       else errorHandler(false)
 
