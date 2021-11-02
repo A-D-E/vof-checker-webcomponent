@@ -7,11 +7,12 @@ template.innerHTML = `
   display: flex;
   align-items: center;
   font-family: Gudea,Roboto,"Helvetica Neue",Arial,sans-serif;
+  width: 100%;
 }
 
 .vof-checker__inputwrap {
     position: relative;
-    flex-basis: 30%;
+    flex: 1;
     margin-right: 2rem;
 }
 
@@ -53,6 +54,7 @@ template.innerHTML = `
 }
 .vof-checker__input {
   width: 100%;
+  flex: 1;
   font: inherit;
   color: #000;
   border: 0;
@@ -69,6 +71,15 @@ template.innerHTML = `
   border-bottom: solid thin rgb(1, 135, 157);
   margin: 0 1rem;
   -webkit-tap-highlight-color: transparent;
+}
+
+.vof-checker__buttonswrap {
+  flex: 1;
+  display: flex;
+}
+
+.vof-checker__label {
+  flex: 1;
 }
 .vof-checker__input:active, .vof-checker__input:focus {
   border: none;
@@ -167,8 +178,10 @@ template.innerHTML = `
             <span id="vof-checker__chip-success" class="vof-checker__chip-success hide"><span class="vof-checker__chip-success-icon">&#10004;</span><slot name="chip-success"></slot></span>
             <div id="vof-checker__error" class="vof-checker__error"><slot name="error"></slot></div>
             </div>
+            <div class="vof-checker__buttonswrap">
             <button id="vof-checker__button" class="vof-checker__button disabled"><slot name="button"></slot> <span class="loader awesome-spin"></span></button>
             <button id="vof-checker__setup-button" class="vof-checker__setup-button disabled"><slot name="setup-button"></slot></button>
+            </div>
         </form>
         
         <div id="vof-checker__feedback" class="vof-checker__feedback"><slot name="feedback"></slot></div>
@@ -306,7 +319,7 @@ class VofChecker extends HTMLElement {
       }
     })
 
-    document.body.onkeydown = function (e) {
+    this.input.onkeydown = function (e) {
       if (
         e.key === ' ' ||
         e.key === 'ä' ||
