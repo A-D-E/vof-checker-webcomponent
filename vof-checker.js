@@ -325,7 +325,6 @@ class VofChecker extends HTMLElement {
     })
 
     this.input.onkeydown = function (e) {
-      
       if (
         e.key === ' ' ||
         e.key === 'ä' ||
@@ -338,10 +337,10 @@ class VofChecker extends HTMLElement {
         e.key === '.' ||
         e.key === 'Dead' ||
         e.which === 211 ||
-        e.shiftKey ||
+        // e.shiftKey ||
         e.key === 'CapsLock' ||
         e.key === 'Control' ||
-        !/[a-z0-9-]/i.test(e.key)
+        !/[a-zA-Z0-9-]/i.test(e.key)
       ) {
         console.log(e.key + ' illegal character')
         return false
