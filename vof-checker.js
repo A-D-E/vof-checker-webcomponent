@@ -338,7 +338,7 @@ class VofChecker extends HTMLElement {
         e.key === 'Dead' ||
         e.which === 211 ||
         // e.shiftKey ||
-        e.key === 'CapsLock' ||
+        // e.key === 'CapsLock' ||
         e.key === 'Control' ||
         !/[a-zA-Z0-9-]/i.test(e.key)
       ) {
